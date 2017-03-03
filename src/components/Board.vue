@@ -1,10 +1,10 @@
 <template>
   <div>
-    <game-state :game="game" :history="history" />
+    <game-state :game="game" :history="history" :restoreGame="restoreGame" />
     <table class="board">
       <tr v-for="row in rowLabels">
         <th class="row">{{row}}</th>
-        <space v-for="col in colLabels" :space="spaces[`${row}${col}`]" @hover="hover" @leave="leave" @drop="drop"/>
+        <space v-for="col in colLabels" :key="spaces[`${col}${row}`].label" :space="spaces[`${col}${row}`]" @hover="hover" @leave="leave" @drop="drop"/>
       </tr>
       <tr>
         <th>&nbsp;</th>
@@ -20,9 +20,8 @@
 <script>
   import Space from './Space';
   import GameState from './GameState';
-  import Chess from '../chess';
 
-  const game = new Chess();
+  const game = new window.Chess();
   game.newGame();
 
   export default {
