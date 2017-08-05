@@ -1,5 +1,6 @@
 <template>
   <div>
+    <pawn-promotion color="white"></pawn-promotion>
     <game-state :game="game" :history="history" :restoreGame="restoreGame" />
     <table class="board">
       <tr v-for="row in rowLabels">
@@ -20,6 +21,7 @@
 <script>
   import Space from './Space';
   import GameState from './GameState';
+  import PawnPromotion from './PawnPromotion';
 
   const game = new window.Chess();
   game.newGame();
@@ -49,6 +51,10 @@
       };
     },
     created() {
+      if (this.$route.params.fen) {
+        game.restoreGame(this.$route.params.fen);
+      }
+
       this.updateGameState();
       this.history.unshift(game.persistGame());
     },
@@ -85,7 +91,7 @@
         if (piece) {
           // Record the moves so we can blank them out on mouse-leave
           piece.getMoves(space, game.getBoard()).forEach((move) => {
-            this.spaces[move].selected = piece.getLabel();
+            this.spaces[move].selected = true;
           });
         }
       },
@@ -94,9 +100,9 @@
       },
       drop(event, to, suspendRules) {
         const from = event.dataTransfer.getData('label');
-        if (game.move(from, to, suspendRules)) {
-          this.updateGameState();
+        if (game.move(from, to, { suspendRules, promotion: 'Q' })) {
           this.history.unshift(game.persistGame());
+          this.updateGameState();
         }
       },
     },

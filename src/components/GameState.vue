@@ -1,22 +1,29 @@
 <template>
   <div class="aside">
-    Current turn: {{currentTurn}}
+    <p>Current turn: {{currentTurn}}</p>
+    <p>Check: {{playerInCheck}}</p>
+    <p v-if=winner>
+      Winner: {{winner}}
+    </p>
     <h4>Game History:</h4>
     <div class="container">
-    <table>
-      <thead>
-        <tr>
-          <th></th><th>Move</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="item,index in history" :class="{selected: item == currentState}">
-          <th>{{history.length - index}}</th>
-          <td><a :title="item" @click.prevent="restoreGame(item)" href="#">{{item}}</a></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+      <table>
+        <thead>
+          <tr>
+            <th></th><th>Move</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="item,index in history" :class="{selected: item == currentState}">
+            <th>{{history.length - index}}</th>
+            <td><a :title="item" @click.prevent="restoreGame(item)" href="#">{{item}}</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="game-buttons">
+      <button class="btn btn-default">New Game</button>
+    </div>
   </div>
 </template>
 
@@ -26,6 +33,12 @@
     computed: {
       currentTurn() {
         return this.game.getCurrentTurn();
+      },
+      playerInCheck() {
+        return this.game.getPlayerInCheck();
+      },
+      winner() {
+        return this.game.getWinner();
       },
       currentState() {
         return this.game.persistGame();

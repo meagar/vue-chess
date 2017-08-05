@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Router from 'vue-router';
 import Hello from '@/components/Hello';
-import Board from '@/components/Board';
+import BoardViewer from '@/components/BoardViewer';
 
 Vue.use(Router);
 
@@ -15,7 +15,12 @@ export default new Router({
     {
       path: '/board',
       name: 'Board',
-      component: Board,
+      component: BoardViewer,
+    },
+    {
+      path: '/board/:fen*',
+      name: 'Board',
+      component: BoardViewer,
     },
   ],
 });
