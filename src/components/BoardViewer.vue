@@ -1,6 +1,6 @@
 <template>
   <div>
-    <pawn-promotion color="white"></pawn-promotion>
+    <pawn-promotion v-if="showPawnPromotion" @promote="promote" :color="pawnPromotionColor"></pawn-promotion>
     <game-state :game="game" :history="history" :restoreGame="restoreGame" />
     <table class="board">
       <tr v-for="row in rowLabels">
@@ -45,6 +45,7 @@
         colLabels: game.COL_LABELS,
         currentTurn: game.currentTurn,
         history: [],
+        pawnPromotionColor: null,
         fenString: game.persistGame(),
         spaces,
         game,
@@ -59,7 +60,12 @@
       this.history.unshift(game.persistGame());
     },
     components: {
-      Space, GameState,
+      Space, GameState, PawnPromotion,
+    },
+    computed: {
+      showPawnPromotion() {
+        return !!this.pawnPromotionColor;
+      },
     },
     methods: {
       restoreGame(fen) {
@@ -98,12 +104,31 @@
       leave(spaceLabel) {
         Object.keys(this.spaces).forEach((label) => { this.spaces[label].selected = false; });
       },
-      drop(event, to, suspendRules) {
-        const from = event.dataTransfer.getData('label');
-        if (game.move(from, to, { suspendRules, promotion: 'Q' })) {
+      drop(from, to, suspendRules) {
+        const promote = (space) => {
+          this.pawnPromotionColor = space.getPiece().getColor();
+          return new Promise((resolve, reject) => {
+            this.resolvePromotion = resolve;
+            this.rejectPromotion = reject;
+          });
+        };
+
+        game.move(from, to, { suspendRules, promote }).then(() => {
           this.history.unshift(game.persistGame());
           this.updateGameState();
+        }, () => { });
+      },
+
+      promote(ch) {
+        if (ch) {
+          this.resolvePromotion(ch);
+        } else {
+          this.rejectPromotion(ch);
         }
+
+        this.resolvePromotion = null;
+        this.rejectPromotion = null;
+        this.pawnPromotionColor = null;
       },
     },
   };

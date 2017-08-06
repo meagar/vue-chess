@@ -229,7 +229,7 @@ class Pawn extends __WEBPACK_IMPORTED_MODULE_0__piece__["a" /* default */] {
     return moves.filter(m => m);
   }
 
-  willPromote(space) {
+  canPromote(space) {
     return this.white() && space.row == '8' || this.black() && space.row == '1';
   }
 }
@@ -289,7 +289,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__bishop__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__queen__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__king__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__board__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__space__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__board__ = __webpack_require__(8);
 
 
 
@@ -300,7 +301,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
-const INITIAL_BOARD = 'k7/7P/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+const INITIAL_BOARD = 'k7/13P2K/8/8/8/8/PPPPPPPP/RNBQ1BNR w KQkq - 0 1';
 //const INITIAL_BOARD = 'rnbqkbnr/pppp1ppp/8/8/3pP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 1';
 // A board where the king is in check
 //const INITIAL_BOARD = 'rnbq1bnr/p1pp1ppp/1pk2P1/4P3/215/4P3/PPP2PPP/RNB1KBNR b KQkq - 0 1'
@@ -308,11 +309,11 @@ const INITIAL_BOARD = 'k7/7P/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
 class Chess {
   constructor(whiteFn, blackFn, state) {
-    this.ROW_LABELS = __WEBPACK_IMPORTED_MODULE_7__board__["a" /* default */].ROW_LABELS;
-    this.COL_LABELS = __WEBPACK_IMPORTED_MODULE_7__board__["a" /* default */].COL_LABELS;
+    this.ROW_LABELS = __WEBPACK_IMPORTED_MODULE_8__board__["a" /* default */].ROW_LABELS;
+    this.COL_LABELS = __WEBPACK_IMPORTED_MODULE_8__board__["a" /* default */].COL_LABELS;
     this.INITIAL_BOARD = INITIAL_BOARD;
 
-    this.board = new __WEBPACK_IMPORTED_MODULE_7__board__["a" /* default */]();
+    this.board = new __WEBPACK_IMPORTED_MODULE_8__board__["a" /* default */]();
 
     this.whiteFn = whiteFn;
     this.blackFn = blackFn;
@@ -375,11 +376,11 @@ class Chess {
     return piece.getMoves(space, this.getBoard());
   }
 
+  // Returns a promise
   move(from, to, options = {}) {
     const fromSpace = this.board.getSpace(from);
     const toSpace = this.board.getSpace(to);
     const piece = fromSpace.getPiece();
-
 
     if (piece.getColor() !== this.getCurrentTurn()) {
       throw(`Player ${piece.getColor()} tried to move on ${this.getCurrentTurn()}'s turn`);
@@ -389,27 +390,49 @@ class Chess {
     if (this._canMove(fromSpace, toSpace, piece, options)) {
       // Make sure we can legally move to the target space
       const capture = toSpace.getPiece();
-      toSpace.setPiece(piece, options.promotion);
+      toSpace.setPiece(piece);
       fromSpace.clearPiece();
-      this._currentTurn = this._currentTurn === 'black' ? 'white' : 'black';
-      return true;
+
+      let moved;
+
+      if (piece.canPromote && piece.canPromote(toSpace)) {
+        moved = new Promise((resolve, reject) => {
+          options.promote(toSpace).then((ch) => {
+            // Promoted
+            const piece = Chess.buildPiece(toSpace.getPiece().white() ? ch.toUpperCase() : ch.toLowerCase());
+            toSpace.setPiece(piece);
+            resolve();
+          }, () => {
+            // Promotion cancelled
+            toSpace.setPiece(capture);
+            fromSpace.setPiece(piece);
+            reject('Move cancelled by user');
+          });
+        });
+      } else {
+        moved = Promise.resolve();
+      }
+
+      return moved.then(() => { this._currentTurn = this._currentTurn === 'black' ? 'white' : 'black'; })
     }
-    return false;
+
+    return Promise.reject('Illegal move');
   }
 
   _canMove(fromSpace, toSpace, piece, options) {
     if (options.suspendRules) { return true; }
 
-    if (this._validateMove(fromSpace, toSpace, piece, options)) {
+    if (this._validateMove(fromSpace, toSpace, piece)) {
       // Make sure we can legally move to the target space
       const capture = toSpace.getPiece();
       toSpace.setPiece(piece);
       fromSpace.clearPiece();
 
+      // See if this move would expose the player's own king to check
       const canMove = !this.playerIsInCheck(piece.getColor());
 
-      // This move would expose the player's own king to check
-      fromSpace.setPiece(toSpace.getPiece());
+      // Restore the old state of the board
+      fromSpace.setPiece(piece);
       toSpace.setPiece(capture);
 
       return canMove;
@@ -492,25 +515,14 @@ class Chess {
       return false;
     }
 
-    // Pawns being promoted require a promotion input
-    if (piece.constructor == __WEBPACK_IMPORTED_MODULE_1__pawn__["a" /* default */] && piece.willPromote(toSpace)) {
-      if (!options.promotion) {
-        throw "Missing options.promotion when moving a pawn to its final rank";
-      }
-    }
-
     return true;
-  }
-
-  _moveError() {
-
   }
 }
 /* harmony export (immutable) */ __webpack_exports__["default"] = Chess;
 
 
-Chess.ROW_LABELS = __WEBPACK_IMPORTED_MODULE_7__board__["a" /* default */].ROW_LABELS;
-Chess.COL_LABELS = __WEBPACK_IMPORTED_MODULE_7__board__["a" /* default */].COL_LABELS;
+Chess.ROW_LABELS = __WEBPACK_IMPORTED_MODULE_8__board__["a" /* default */].ROW_LABELS;
+Chess.COL_LABELS = __WEBPACK_IMPORTED_MODULE_8__board__["a" /* default */].COL_LABELS;
 
 if (typeof window !== 'undefined') {
   window.Chess = Chess;
@@ -742,13 +754,8 @@ class Space {
     return !!attackingSpace;
   }
 
-  setPiece(piece, options) {
-    if (piece && piece.constructor == __WEBPACK_IMPORTED_MODULE_1__pawn__["a" /* default */] && piece.willPromote(this)) {
-      console.log('doing it')
-      this.piece = new __WEBPACK_IMPORTED_MODULE_2__queen__["a" /* default */]('Q')
-    } else {
-      return this.piece = piece;
-    }
+  setPiece(piece, promotion) {
+    return this.piece = piece;
   }
 
   clearPiece() {

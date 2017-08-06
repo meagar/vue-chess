@@ -76,8 +76,9 @@
       },
       drop(event) {
         event.preventDefault();
+        const from = event.dataTransfer.getData('label');
         this.draggingOver = false;
-        this.$emit('drop', event, this.space.label, (event.shiftKey || event.metaKey));
+        this.$emit('drop', from, this.space.label, (event.shiftKey || event.metaKey));
       },
       dragover(event) {
         event.preventDefault();

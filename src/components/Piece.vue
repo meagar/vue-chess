@@ -40,11 +40,12 @@
 </script>
 
 <style lang="sass" scoped>
+  @import "../styles/chess.sass"
+
   .piece
     font-size: 40px
     &.white
-      color: #fff
-      text-shadow: 0px 0px 2px #555
+      @include white-piece
     &.black
-      color: #000
+      @include black-piece
 </style>
