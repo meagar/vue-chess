@@ -4,7 +4,7 @@
     <div class="modal-body">
       <h2>Pawn Promotion</h2>
       <h3>Select a piece to promote to</h3>
-      <table border="1">
+      <table>
         <tr>
           <td v-for="symbol,ch in pieces">
             <a :class="color" href="#" @click.prevent="(event) => selectPiece(ch)">{{symbol}}</a>
@@ -18,7 +18,6 @@
 
 <script>
 const PIECES = {
-  p: '♟',
   r: '♜',
   n: '♞',
   b: '♝',
@@ -34,7 +33,7 @@ export default {
   },
   methods: {
     selectPiece(ch) {
-      ch = (this.color === 'white' ? ch.toUpperCase() : ch.toLowerCase());
+      ch = this.color === 'white' ? ch.toUpperCase() : ch.toLowerCase();
       this.$emit('promote', ch);
     },
     cancel() {
@@ -59,7 +58,6 @@ export default {
 
   .modal-body
     width: 50vw
-    height: 50vh
     min-height: 300px
     position: fixed
     left: 50%
@@ -83,6 +81,9 @@ export default {
     font-size: 50px
     padding: 0 10px
     text-decoration: none
+    display: block
+    &:hover
+      background: #8eff99
     &.white
       @include white-piece
     &.black
