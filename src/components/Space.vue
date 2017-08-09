@@ -1,6 +1,6 @@
 <template>
   <td class="space" :class="classes" @mouseover="mouseover" @mouseleave="mouseleave" @dragover="dragover" @dragleave="dragout" @drop="drop">
-    <piece v-if="piece" :piece="piece" :interaction="interaction" @drag="drag"/>
+    <piece v-if="piece" :piece="piece" :interaction="interaction" @drag="drag" />
     <span v-else>{{label}}</span>
   </td>
 </template>
@@ -93,6 +93,8 @@
 </script>
 
 <style lang="sass" scoped>
+  @import "../styles/chess.sass"
+
   td
     cursor: pointer
     border: 1px solid #000
@@ -107,7 +109,7 @@
     &.black
       background-color: #aaa
     &.hover
-      background: #8eff98
+      background: $piece-hover-color
     &.move
       background: #e5b275
       &.dragover
