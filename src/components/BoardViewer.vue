@@ -23,27 +23,29 @@
   import GameState from './GameState';
   import PawnPromotion from './PawnPromotion';
 
-  const game = new window.Chess();
+  const Chess = window.Chess;
+  const game = new Chess();
   game.newGame();
 
   export default {
     data() {
       // Mapping of space labels to names
       const spaces = {};
-      game.getBoard().eachSpace((space, label) => {
+      game.eachSpace((label, piece) => {
         spaces[label] = {
           selected: false,
-          piece: space.getPiece() && space.getPiece().getLabel(),
-          color: space.getColor(),
-          label: space.getLabel(),
+          piece,
+          color: Chess.getSpaceColor(label),
+          label,
           interaction: false,
+          moved: false,
         };
       });
 
       return {
         rowLabels: game.ROW_LABELS,
         colLabels: game.COL_LABELS,
-        currentTurn: game.currentTurn,
+        currentTurn: game.getCurrentTurn(),
         history: [],
         pawnPromotionColor: null,
         fenString: game.persistGame(),
@@ -73,38 +75,55 @@
         this.updateGameState();
       },
       updateGameState() {
-        game.getBoard().eachSpace((space, label) => {
+        game.eachSpace((label, piece) => {
           this.spaces[label].selected = false;
+          this.spaces[label].moved = false;
 
-          const piece = space.getPiece();
           if (piece) {
-            this.spaces[label].piece = piece.getLabel();
-            this.spaces[label].interaction = piece.getColor() === game.getCurrentTurn();
+            this.spaces[label].piece = piece;
+            this.spaces[label].interaction = (Chess.getPieceColor(piece) === game.getCurrentTurn());
           } else {
             this.spaces[label].piece = null;
             this.spaces[label].interaction = false;
           }
         });
 
+        // Hilight the last move
+        if (this.from) {
+          this.spaces[this.from].moved = true;
+          this.spaces[this.to].moved = true;
+        }
+
         this.fenString = game.persistGame();
         this.currentTurn = game.getCurrentTurn();
       },
       hover(label) {
         const state = this.spaces[label];
-        const space = game.getBoard().getSpace(label);
-        const piece = space.getPiece();
+        const piece = game.getPiece(label);
 
         if (piece) {
           // Record the moves so we can blank them out on mouse-leave
-          piece.getMoves(space, game.getBoard()).forEach((move) => {
-            this.spaces[move].selected = true;
+          game.getMoves(label).forEach((move) => {
+            this.spaces[move.to].selected = true;
           });
         }
       },
       leave(spaceLabel) {
         Object.keys(this.spaces).forEach((label) => { this.spaces[label].selected = false; });
       },
-      drop(from, to, suspendRules) {
+      drop(from, to, suspendRules = false) {
+        if (suspendRules) {
+          // TODO: Suspend rules logic
+        } else {
+          const move = game.getMoves(from).find((m) => {
+            return m.to === to;
+          });
+          if (move) {
+            this.move(move, suspendRules);
+          }
+        }
+      },
+      move(move, suspendRules) {
         const promote = (space) => {
           this.pawnPromotionColor = space.getPiece().getColor();
           return new Promise((resolve, reject) => {
@@ -113,8 +132,11 @@
           });
         };
 
-        game.move(from, to, { suspendRules, promote }).then(() => {
-          this.history.unshift(game.persistGame());
+        this.from = move.from;
+        this.to = move.to;
+
+        game.move(move.from, move.to, { suspendRules, promote }).then(() => {
+          // this.history.unshift(game.persistGame());
           this.updateGameState();
         }, () => { });
       },

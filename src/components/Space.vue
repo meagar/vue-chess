@@ -13,7 +13,7 @@
     data() {
       return {
         selected: false,
-        label: this.space.label,
+        label: this.label,
         draggingOver: false,
       };
     },
@@ -43,6 +43,11 @@
             // A move that doesn't capture a piece
             classes.push('move');
           }
+        }
+
+        if (this.space.moved) {
+          console.log('moved!');
+          classes.push('moved');
         }
 
         if (this.draggingOver) {
@@ -106,15 +111,19 @@
 
     &.white
       background-color: #ddd
+      &.moved
+        background: #dfd
     &.black
       background-color: #aaa
+      &.moved
+        background: #bdb
     &.hover
       background: $piece-hover-color
     &.move
       background: #e5b275
       &.dragover
         background: darken(#e5b275, 25%)
-    &.capture
+    &.capture, &.moved.capture
       background: #ff8484
       &.dragover
         background: darken(#ff8484, 25%)
