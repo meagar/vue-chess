@@ -29,7 +29,7 @@
 
 <script>
   export default {
-    props: ['game', 'history', 'restoreGame'],
+    props: ['game', 'restoreGame'],
     computed: {
       currentTurn() {
         return this.game.getCurrentTurn();
@@ -42,6 +42,9 @@
       },
       currentState() {
         return this.game.persistGame();
+      },
+      history() {
+        return this.game.getStates();
       },
     },
   };

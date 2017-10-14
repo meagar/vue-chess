@@ -1,7 +1,7 @@
 <template>
   <div>
     <pawn-promotion v-if="showPawnPromotion" @promote="promote" :color="pawnPromotionColor"></pawn-promotion>
-    <game-state :game="game" :history="history" :restoreGame="restoreGame" />
+    <game-state :game="game" :restoreGame="restoreGame" />
     <table class="board">
       <tr v-for="row in rowLabels">
         <th class="row">{{row}}</th>
@@ -26,6 +26,7 @@
   const Chess = window.Chess;
   const game = new Chess();
   game.newGame();
+  window.game = game;
 
   export default {
     data() {
@@ -124,8 +125,8 @@
         }
       },
       move(move, suspendRules) {
-        const promote = (space) => {
-          this.pawnPromotionColor = space.getPiece().getColor();
+        const promotion = (chess, space, piece) => {
+          this.pawnPromotionColor = Chess.getPieceColor(piece);
           return new Promise((resolve, reject) => {
             this.resolvePromotion = resolve;
             this.rejectPromotion = reject;
@@ -135,8 +136,7 @@
         this.from = move.from;
         this.to = move.to;
 
-        game.move(move.from, move.to, { suspendRules, promote }).then(() => {
-          // this.history.unshift(game.persistGame());
+        game.move(move.from, move.to, { suspendRules, promotion }).then(() => {
           this.updateGameState();
         }, () => { });
       },

@@ -1,34 +1,30 @@
 <template>
-  <div :draggable="interaction" class="piece" :class="color" @dragstart="dragStart">
-    {{text}}
-  </div>
+  <div :draggable="interaction" class="piece" :class="classes" @dragstart="dragStart"></div>
 </template>
 
 <script>
-  const PIECE_STRINGS = {
-    P: '♙',
-    R: '♖',
-    N: '♘',
-    B: '♗',
-    Q: '♕',
-    K: '♔',
-    p: '♟',
-    r: '♜',
-    n: '♞',
-    b: '♝',
-    q: '♛',
-    k: '♚',
+  const PIECE_NAMES = {
+    p: 'pawn',
+    r: 'rook',
+    n: 'knight',
+    b: 'bishop',
+    q: 'queen',
+    k: 'king',
   };
 
   export default {
     props: ['piece', 'interaction'],
     computed: {
-      text() {
-        return PIECE_STRINGS[this.piece.toLowerCase()];
+      pieceName() {
+        return PIECE_NAMES[this.piece.toLowerCase()];
       },
 
       color() {
         return (this.piece.toLowerCase() === this.piece) ? 'black' : 'white';
+      },
+
+      classes() {
+        return [this.color, this.pieceName];
       },
     },
     methods: {
@@ -44,8 +40,23 @@
 
   .piece
     font-size: 40px
+    &:before
+      width: 100%
+      height: 100%
     &.white
       @include white-piece
     &.black
       @include black-piece
+    &.pawn:before
+      content: '♟',
+    &.rook:before
+      content: '♜',
+    &.knight:before
+      content: '♞',
+    &.bishop:before
+      content: '♝',
+    &.queen:before
+      content: '♛',
+    &.king:before
+      content: '♚'
 </style>
