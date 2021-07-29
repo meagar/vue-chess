@@ -1,6 +1,8 @@
 # chess
 
-> chess!
+chess!
+
+This is a toy, and incomplete.
 
 ## Build Setup
 
